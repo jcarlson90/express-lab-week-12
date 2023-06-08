@@ -35,6 +35,22 @@ exports.loginUser = async (req, res) => {
       res.status(400).send('Invalid login credentials')
     } else {
       const token = await user.generateAuthToken()
+      user.loggedIn = true
+      res.json({ user, token })
+    }
+  } catch(error){
+    res.status(400).json({message: error.message})
+  }
+}
+
+exports.logoutUser = async (req, res) => {
+  try{
+    const user = await User.findOne({ email: req.body.email })
+    if (!user || !await bcrypt.compare(req.body.password, user.password)) {
+      res.status(400).send('Invalid login credentials')
+    } else {
+      const token = await user.generateAuthToken()
+      user.loggedIn = true
       res.json({ user, token })
     }
   } catch(error){
@@ -60,6 +76,27 @@ exports.deleteUser = async (req, res) => {
     await req.user.deleteOne()
     res.json({ message: 'User deleted' })
   }catch(error){
+    res.status(400).json({message: error.message})
+  }
+}
+
+exports.getUsers = async (req, res) => {
+  try {
+    const users = await User.find()
+    const loggedInUsers = users.map((user) => {
+      //const toekn = user.generateAuthToken()
+      return {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        password: user.password,
+        loggedIn: user.loggedIn,
+        //token: token
+      }
+    }) 
+      res.json({user, token})
+   
+  }catch (error) {
     res.status(400).json({message: error.message})
   }
 }
